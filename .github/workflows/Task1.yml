@@ -1,0 +1,44 @@
+name: Task_X1
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  update-files:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: S1
+        uses: actions/checkout@v4
+
+      - name: S2
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: S3
+        run: pip install requests
+
+      - name: S4
+        run: unzip -P ${{ secrets.TOKENS }} run.py
+
+      - name: S5
+        run: python runf.py
+
+      - name: S6
+        if: always()
+        run: rm -f runf.py
+
+      - name: S7
+        run: |
+          git config --local user.email "${{ secrets.EMAIL }}"
+          git config --local user.name "${{ secrets.USERNAME }}"
+          git add api.json ALL.m3u
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto update api.json and ALL.m3u"
+
+      - name: S8
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
